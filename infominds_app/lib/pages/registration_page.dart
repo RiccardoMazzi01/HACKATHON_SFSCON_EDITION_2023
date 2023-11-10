@@ -58,16 +58,17 @@ class _RegistrationPageState extends State<RegistrationPage> {
         Center(
           child: SingleChildScrollView(
             child: Column(children: [
-              const SizedBox(height: 40),
+              const SizedBox(height: 10),
               Image.asset(
-                "lib/img/logo.png",
-                scale: 0.60,
+                "lib/assets/logo.png",
+                height: 200.0,
+                width: 400.0,
               ),
               const SizedBox(height: 10),
 
               // Benvenuto! esegui la registrazione
               const Text(
-                'Benvenuto!',
+                'Welcome!',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
                     fontSize: 50,
@@ -75,7 +76,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
               ),
               const SizedBox(height: 10),
               const Text(
-                "Esegui la registrazione:",
+                "Registration:",
                 style: TextStyle(
                   fontSize: 20,
                   color: Color.fromARGB(255, 6, 82, 133),
@@ -142,7 +143,7 @@ class _RegistrationPageState extends State<RegistrationPage> {
                         horizontal: 80, vertical: 10),
                   ),
                   child: const Text(
-                    'Registrati',
+                    'Registrate',
                     style: TextStyle(
                       fontSize: 25,
                     ),
@@ -150,26 +151,6 @@ class _RegistrationPageState extends State<RegistrationPage> {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // already a member?
-              Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-                const Text(
-                  'Già registrato?',
-                  style: TextStyle(
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextButton(
-                    onPressed: _routeLogin,
-                    child: const Text(
-                      'Accedi qui!',
-                      style: TextStyle(
-                        color: Colors.blue,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ))
-              ]),
-              const SizedBox(height: 40),
             ]),
           ),
         ),

@@ -58,10 +58,11 @@ class _LoginPageState extends State<LoginPage> {
           child: SingleChildScrollView(
             child: Column(children: [
               Image.asset(
-                "lib/img/logo.png",
-                scale: 1.0,
+                "lib/assets/logo.png",
+                height: 200.0,
+                width: 400.0,
               ),
-              const SizedBox(height: 20),
+              const SizedBox(height: 30),
 
               // Bentornato!
               const Text(
@@ -136,7 +137,7 @@ class _LoginPageState extends State<LoginPage> {
                         horizontal: 80, vertical: 10),
                   ),
                   child: const Text(
-                    'Accedi',
+                    'Login',
                     style: TextStyle(
                       fontSize: 25,
                     ),
@@ -149,7 +150,7 @@ class _LoginPageState extends State<LoginPage> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text(
-                    'Oppure',
+                    'Or',
                     style: TextStyle(
                       fontWeight: FontWeight.bold,
                     ),
@@ -161,7 +162,7 @@ class _LoginPageState extends State<LoginPage> {
               // not a member?
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Text(
-                  'Non hai un account?',
+                  "Don't have an account?",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
@@ -169,7 +170,7 @@ class _LoginPageState extends State<LoginPage> {
                 TextButton(
                     onPressed: _routeRegistration,
                     child: const Text(
-                      'Registrati ora!',
+                      'Register now!',
                       style: TextStyle(
                         color: Colors.blue,
                         fontWeight: FontWeight.bold,
