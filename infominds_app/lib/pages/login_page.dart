@@ -60,7 +60,7 @@ class _LoginPageState extends State<LoginPage> {
               Image.asset(
                 "lib/assets/logo.png",
                 height: 200.0,
-                width: 400.0,
+                width: 360.0,
               ),
               const SizedBox(height: 30),
 
@@ -144,7 +144,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 20),
 
               const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -157,7 +157,7 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ],
               ),
-              const SizedBox(height: 30),
+              const SizedBox(height: 10),
 
               // not a member?
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
