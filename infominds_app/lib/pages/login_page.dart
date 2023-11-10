@@ -59,8 +59,8 @@ class _LoginPageState extends State<LoginPage> {
             child: Column(children: [
               Image.asset(
                 "lib/assets/logo.png",
-                height: 200.0,
-                width: 360.0,
+                height: 150.0,
+                width: 250.0,
               ),
               const SizedBox(height: 30),
 
@@ -69,7 +69,7 @@ class _LoginPageState extends State<LoginPage> {
                 'Welcome!',
                 style: TextStyle(
                     fontWeight: FontWeight.bold,
-                    fontSize: 50,
+                    fontSize: 40,
                     color: Color.fromARGB(255, 19, 76, 97)),
               ),
 
@@ -145,24 +145,10 @@ class _LoginPageState extends State<LoginPage> {
                 ),
               ),
               const SizedBox(height: 20),
-
-              const Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text(
-                    'Or',
-                    style: TextStyle(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-
               // not a member?
               Row(mainAxisAlignment: MainAxisAlignment.center, children: [
                 const Text(
-                  "Don't have an account?",
+                  "Not a member?",
                   style: TextStyle(
                     fontWeight: FontWeight.bold,
                   ),
