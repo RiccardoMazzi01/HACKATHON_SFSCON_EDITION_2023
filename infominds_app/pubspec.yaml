@@ -1,0 +1,23 @@
+name: infominds_app
+description: A new Flutter project.
+publish_to: 'none'
+version: 0.1.0
+
+environment:
+  sdk: '>=3.1.2 <4.0.0'
+
+dependencies:
+  firebase_core: ^2.15.0
+  cloud_firestore: ^4.8.4
+  flutter:
+    sdk: flutter
+  http: ^1.1.0
+  firebase_messaging: ^14.6.8
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
