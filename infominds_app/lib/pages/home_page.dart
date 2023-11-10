@@ -181,7 +181,7 @@ class HomePageState extends State<HomePage> {
                     ),
                     Center(
                       child: Container(
-                        width: 400.0, // Larghezza specifica
+                        width: 380.0, // Larghezza specifica
                         height: 300.0, // Altezza specifica
                         child: LineChart(
                           LineChartData(
@@ -254,7 +254,7 @@ class HomePageState extends State<HomePage> {
                     ),
                     Center(
                       child: Container(
-                        width: 400.0, // Larghezza specifica
+                        width: 380.0, // Larghezza specifica
                         height: 300.0, // Altezza specifica
                         child: LineChart(
                           LineChartData(
