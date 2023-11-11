@@ -208,12 +208,10 @@ class HomePageState extends State<HomePage> {
     const String url = "https://fcm.googleapis.com/fcm/send";
     final Map<String, String> headers = {
       "Content-Type": "application/json",
-      "Authorization":
-          "key=AAAA-Ntt7lY:APA91bF3WMC75YjCMms8gz0kHLYRRiQJa2V2E26mmNMjDg0UrK7GF4n8N6pHZvPHQ6FIKC-DB_EoBVTMH6_IFV3RI-0tvJV-_CWo_8cbRWX3YQayZXiX4qI_Fz5ICO-MOTvm_H_g2Eaz"
+      "Authorization": "authorization"
     };
     final Map<String, dynamic> body = {
-      "to":
-          "eJTG-3n-TF-dEKIxceROIG:APA91bFjVk593wh5NHhkHVYgCtDAT-gAUeZbivxj8shOSktUEf4ndoeSAe8kksOMthFKj9wY3RdRyrC-xIM-Asd1iVsXfPgNPvocbitCrYH4dZ66KpQZ-zHR2oEmmKgL8GK8VukVvWv0",
+      "to": "token",
       "notification": {
         "body": "Anomaly detected in electricity consumption!",
         "title": "Alert"
