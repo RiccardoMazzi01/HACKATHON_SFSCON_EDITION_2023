@@ -1,5 +1,7 @@
 // ignore_for_file: sort_child_properties_last, prefer_final_fields, prefer_const_constructors
 
+import 'dart:async';
+import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
@@ -14,9 +16,28 @@ class HomePage extends StatefulWidget {
 }
 
 class HomePageState extends State<HomePage> {
+  List<int> minMaxTimestampsArray = [];
+
+  int _seconds = 0;
+  late Timer _timer;
+
   @override
   void initState() {
     _getSectors();
+    minMaxTimestampsArray =
+        timestampsFromDateAndHours(DateTime.now(), hoursArray);
+    _getCorrectTimestamps(minMaxTimestampsArray);
+    _timer = Timer.periodic(
+      Duration(seconds: 5),
+      (Timer timer) {
+        setState(
+          () {
+            _seconds++;
+            _getRealTimeSensors();
+          },
+        );
+      },
+    );
     super.initState();
   }
 
@@ -40,6 +61,61 @@ class HomePageState extends State<HomePage> {
     return timestamps;
   }
 
+  double convertTimestampInHours(double timestamp) {
+    // Creare un oggetto DateTime dal timestamp in millisecondi
+    DateTime dateTime =
+        DateTime.fromMillisecondsSinceEpoch((timestamp).round());
+
+    // Ottenere le ore come double
+    double ore = dateTime.hour.toDouble();
+
+    return ore;
+  }
+
+  List<FlSpot> TempGraphData = []; // {x=hour, y=value}
+  List<FlSpot> TempGraphDataWatt = [];
+
+  Future _getCorrectTimestamps(List<int> minAndMaxT) async {
+    try {
+      QuerySnapshot documentSnapshot = await firestore
+          .collection('Sectors')
+          .doc('Sec1')
+          .collection('Temperature')
+          .get();
+
+      documentSnapshot.docs.forEach(
+        (DocumentSnapshot document) {
+          Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
+
+          if (data != null) {
+            int timestamp = data['timestamp'];
+
+            if ((timestamp * 1000) >= minAndMaxT[0] &&
+                (timestamp * 1000) <= minAndMaxT[1]) {
+              double timestampD = timestamp.toDouble();
+
+              double x = convertTimestampInHours(timestampD);
+
+              int y = data['value'];
+
+              double yd = y.toDouble();
+
+              FlSpot coordinates = FlSpot(x, yd);
+
+              TempGraphData.add(coordinates);
+            } else {
+              print("NON COMPRESO");
+            }
+          }
+
+          // if uguale per l'anomalia
+        },
+      );
+    } catch (e) {
+      print('Errore durante l\'ottenimento dei documenti: $e');
+    }
+  }
+
   int _selectedPage = 0;
 
   void _onPageChange(int index) {
@@ -57,7 +133,6 @@ class HomePageState extends State<HomePage> {
 
   DateTime selectedDate = DateTime.now();
   List<double> hoursArray = [0.01, 23.59];
-  List<int> timestampsArray = [];
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -70,8 +145,11 @@ class HomePageState extends State<HomePage> {
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
-        timestampsArray = timestampsFromDateAndHours(picked, hoursArray);
-        _get(timestampsArray);
+        minMaxTimestampsArray = timestampsFromDateAndHours(picked, hoursArray);
+        print(minMaxTimestampsArray[0]);
+        print(minMaxTimestampsArray[1]);
+        _getCorrectTimestamps(minMaxTimestampsArray);
+        //_get(timestampsArray);
       });
     }
   }
@@ -81,37 +159,7 @@ class HomePageState extends State<HomePage> {
   }
 
   int currentTemp = 0;
-  int currentElec = 0;
-
-  Future<void> _get(List<int> timestamps) async {
-    try {
-      QuerySnapshot documentSnapshot = await firestore
-          .collection('Sectors')
-          .doc('Sec1')
-          .collection('Watt')
-          .get();
-
-      documentSnapshot.docs.forEach((DocumentSnapshot wattDocument) {
-        Map<String, dynamic>? data =
-            wattDocument.data() as Map<String, dynamic>?;
-
-        // Verifica se la conversione è avvenuta con successo
-        if (data != null) {
-          // Accedi ai singoli campi tramite le chiavi
-          String nomeCampo1 = data[
-              'timestamp']; // Sostituisci 'campo1' con il nome del tuo campo
-          String nomeCampo2 =
-              data['value']; // Sostituisci 'campo2' con il nome del tuo campo
-
-          // Puoi ora utilizzare i dati come desiderato
-          print('Campo1: $nomeCampo1');
-          print('Campo2: $nomeCampo2');
-        }
-      });
-    } catch (e) {
-      print('Errore nella query a Firestore: $e');
-    }
-  }
+  double currentElec = 0;
 
   List<String> sectors = [];
 
@@ -127,6 +175,90 @@ class HomePageState extends State<HomePage> {
       }
     } catch (e) {
       print('Errore nella query a Firestore: $e');
+    }
+  }
+
+  Future _getRealTimeSensors() async {
+    try {
+      QuerySnapshot documentSnapshot = await firestore
+          .collection('Sectors')
+          .doc('Sec1')
+          .collection('Temperature')
+          .get();
+
+      int max_timestamp = 0;
+      int y = 0;
+
+      documentSnapshot.docs.forEach((DocumentSnapshot document) {
+        Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
+
+        if (data != null) {
+          int timestamp = data['timestamp'];
+          if (timestamp > max_timestamp) {
+            setState(() {
+              max_timestamp = timestamp;
+              y = data['value'];
+            });
+          }
+        }
+      });
+
+      int hour = DateTime.now().hour;
+
+      double x = hour.toDouble();
+      double yd = y.toDouble();
+
+      FlSpot coordinates = FlSpot(x, yd);
+
+      TempGraphData.add(coordinates);
+      setState(
+        () {
+          currentTemp = y;
+        },
+      );
+    } catch (e) {
+      print('Errore durante l\'ottenimento dei documenti temperatura: $e');
+    }
+
+    try {
+      QuerySnapshot documentSnapshot = await firestore
+          .collection('Sectors')
+          .doc('Sec1')
+          .collection('Watt')
+          .get();
+
+      int max_timestamp = 0;
+      double ywatt = 0;
+
+      documentSnapshot.docs.forEach((DocumentSnapshot document) {
+        Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
+
+        if (data != null) {
+          int timestamp = data['timestamp'];
+
+          if (timestamp > max_timestamp) {
+            setState(() {
+              max_timestamp = timestamp;
+              ywatt = data['value'];
+            });
+          }
+        }
+      });
+
+      int hour = DateTime.now().hour;
+
+      double x = hour.toDouble();
+
+      FlSpot coordinates = FlSpot(x, ywatt);
+
+      TempGraphDataWatt.add(coordinates);
+      setState(
+        () {
+          currentElec = ywatt;
+        },
+      );
+    } catch (e) {
+      print('Errore durante l\'ottenimento dei documenti elettricità: $e');
     }
   }
 
@@ -224,7 +356,9 @@ class HomePageState extends State<HomePage> {
                       Text(
                         "Sector:    $SECTOR",
                         style: TextStyle(
+                          color: Colors.blue,
                           fontSize: 22,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                       PopupMenuButton<String>(
@@ -258,6 +392,30 @@ class HomePageState extends State<HomePage> {
                   const Divider(
                     thickness: 3.0,
                   ),
+                  const SizedBox(
+                    height: 20.0,
+                  ),
+                  Text(
+                    "Live sensors",
+                    style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.blue),
+                  ),
+                  const SizedBox(
+                    height: 40.0,
+                  ),
+                  Text(
+                    "Current temperature: $currentTemp",
+                    style: TextStyle(fontSize: 20),
+                  ),
+                  const SizedBox(
+                    height: 40.0,
+                  ),
+                  Text(
+                    "Current electricity consumption: $currentElec",
+                    style: TextStyle(fontSize: 20),
+                  )
                 ],
               ),
             ),
@@ -272,7 +430,9 @@ class HomePageState extends State<HomePage> {
                         Text(
                           "Date: ${_formatDate(selectedDate)}",
                           style: TextStyle(
+                            color: Colors.blue,
                             fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         IconButton(
@@ -297,7 +457,9 @@ class HomePageState extends State<HomePage> {
                         Text(
                           "Sector:    $SECTOR",
                           style: TextStyle(
+                            color: Colors.blue,
                             fontSize: 22,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                         PopupMenuButton<String>(
@@ -370,14 +532,32 @@ class HomePageState extends State<HomePage> {
                             lineBarsData: [
                               LineChartBarData(
                                 spots: [
-                                  const FlSpot(0, 3),
-                                  const FlSpot(1, 1),
-                                  const FlSpot(2, 4),
-                                  const FlSpot(3, 2),
-                                  const FlSpot(4, 5),
-                                  const FlSpot(5, 1),
-                                  const FlSpot(6, 4),
-                                ],
+                                  FlSpot(0, 18), //demonstrative values
+                                  FlSpot(1, 18.5),
+                                  FlSpot(2, 18.7),
+                                  FlSpot(3, 18.7),
+                                  FlSpot(4, 18.7),
+                                  FlSpot(5, 19),
+                                  FlSpot(6, 19.3),
+                                  FlSpot(7, 19.6),
+                                  FlSpot(8, 19.7),
+                                  FlSpot(9, 20),
+                                  FlSpot(10, 20.8),
+                                  FlSpot(11, 20.8),
+                                  FlSpot(12, 21),
+                                  FlSpot(13, 21),
+                                  FlSpot(14, 21.2),
+                                  FlSpot(15, 21.3),
+                                  FlSpot(16, 21),
+                                  FlSpot(17, 20.8),
+                                  FlSpot(18, 20.8),
+                                  FlSpot(19, 20.5),
+                                  FlSpot(20, 20),
+                                  FlSpot(21, 19.8),
+                                  FlSpot(22, 19.3),
+                                  FlSpot(23, 18.9),
+                                  FlSpot(24, 18.3),
+                                ], //TempGraphData,
                                 isCurved:
                                     true, // Abilita la curvatura della linea
                                 color: Colors.blue,
@@ -390,16 +570,7 @@ class HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(
-                      height: 20,
-                    ),
-                    Text(
-                      "Current temperature: $currentTemp °C",
-                      style: TextStyle(
-                        fontSize: 20,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 30.0,
+                      height: 30,
                     ),
                     const Divider(
                       thickness: 3,
@@ -443,13 +614,31 @@ class HomePageState extends State<HomePage> {
                             lineBarsData: [
                               LineChartBarData(
                                 spots: [
-                                  const FlSpot(0, 3),
-                                  const FlSpot(1, 1),
-                                  const FlSpot(2, 4),
-                                  const FlSpot(3, 2),
-                                  const FlSpot(4, 5),
-                                  const FlSpot(5, 1),
-                                  const FlSpot(6, 4),
+                                  FlSpot(0, 2), //demonstrative values
+                                  FlSpot(1, 2),
+                                  FlSpot(2, 2),
+                                  FlSpot(3, 2),
+                                  FlSpot(4, 2),
+                                  FlSpot(5, 2),
+                                  FlSpot(6, 3),
+                                  FlSpot(7, 5),
+                                  FlSpot(8, 20),
+                                  FlSpot(9, 40),
+                                  FlSpot(10, 45),
+                                  FlSpot(11, 48),
+                                  FlSpot(12, 48),
+                                  FlSpot(13, 30),
+                                  FlSpot(14, 45),
+                                  FlSpot(15, 48),
+                                  FlSpot(16, 48),
+                                  FlSpot(17, 48),
+                                  FlSpot(18, 35),
+                                  FlSpot(19, 22),
+                                  FlSpot(20, 20),
+                                  FlSpot(21, 5),
+                                  FlSpot(22, 2),
+                                  FlSpot(23, 2),
+                                  FlSpot(24, 2),
                                 ],
                                 isCurved:
                                     true, // Abilita la curvatura della linea
@@ -463,16 +652,7 @@ class HomePageState extends State<HomePage> {
                       ),
                     ),
                     SizedBox(
-                      height: 20,
-                    ),
-                    Text(
-                      "Current consumption: $currentElec watt",
-                      style: TextStyle(
-                        fontSize: 20,
-                      ),
-                    ),
-                    const SizedBox(
-                      height: 30.0,
+                      height: 30,
                     ),
                   ],
                 ),
