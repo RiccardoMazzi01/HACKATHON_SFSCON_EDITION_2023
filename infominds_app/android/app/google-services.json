@@ -1,21 +1,21 @@
 {
   "project_info": {
-    "project_number": "1068833304150",
-    "project_id": "hackathon-sfscon-edition-2023",
-    "storage_bucket": "hackathon-sfscon-edition-2023.appspot.com"
+    "project_number": "",
+    "project_id": "",
+    "storage_bucket": ""
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:1068833304150:android:704da5948eeff47e9d95f7",
+        "mobilesdk_app_id": "",
         "android_client_info": {
-          "package_name": "com.example.infominds_app"
+          "package_name": ""
         }
       },
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyAi15K6d8bCXKTCk0ADl626GOSNnPcasmc"
+          "current_key": ""
         }
       ],
       "services": {

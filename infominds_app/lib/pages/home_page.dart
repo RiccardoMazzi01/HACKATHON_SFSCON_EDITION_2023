@@ -502,49 +502,55 @@ class HomePageState extends State<HomePage> {
                   ),
                   Text(
                     "Current temperature: $currentTemp °C",
-                    style: TextStyle(fontSize: 20),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(
                     height: 30.0,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Minimum: $min_temp °C"),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text("Average: $average_temp °C"),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text("Maximum: $max_temp °C")
-                    ],
+                  Text("Minimum: $min_temp °C",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(
+                    height: 20,
                   ),
-                  SizedBox(height: 20),
+                  Text("Average: $average_temp °C",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Text("Maximum: $max_temp °C",
+                      style:
+                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+                  SizedBox(height: 30),
                   Divider(
                     thickness: 3,
                   ),
+                  SizedBox(height: 30),
                   Text(
                     "Current electricity consumption: $currentElec w",
-                    style: TextStyle(fontSize: 20),
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   const SizedBox(
-                    height: 30.0,
+                    height: 40.0,
                   ),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("Minimum: $min_elec w"),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text("Average: $average_elec w"),
-                      SizedBox(
-                        width: 5,
-                      ),
-                      Text("Maximum: $max_elec w")
-                    ],
+                  Text(
+                    "Minimum: $min_elec w",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Text(
+                    "Average: $average_elec w",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  SizedBox(
+                    height: 20,
+                  ),
+                  Text(
+                    "Maximum: $max_elec w",
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                   ),
                   SizedBox(height: 20),
                 ],
