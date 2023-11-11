@@ -1,2 +1,2 @@
 # HACKATHON_SFSCON_EDITION_2023
- Infominds challenge.
+We developed an IoT system composed by:  Arduino sensors and a smart plug, that collects data regarding energy consumption in an industry then, as the challenge asked, we created an API to access the informations collected; the API is linked with a functioning mobile application(for both android and iOS) with an AI based notification tool that notifies the user when there is an unusual consumption of energy. Information are stored in order to produce a possible standard that could be used for a future regulation.
