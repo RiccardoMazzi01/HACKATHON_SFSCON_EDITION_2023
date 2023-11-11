@@ -1,5 +1,6 @@
 // ignore_for_file: sort_child_properties_last, prefer_final_fields, prefer_const_constructors
 
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:infominds_app/pages/login_page.dart';
@@ -15,7 +16,28 @@ class HomePage extends StatefulWidget {
 class HomePageState extends State<HomePage> {
   @override
   void initState() {
+    _getSectors();
     super.initState();
+  }
+
+  FirebaseFirestore firestore = FirebaseFirestore.instance;
+
+//______________________________________ FUNCTIONS __________________________________________________________________
+
+  String SECTOR = "Sec1";
+
+  List<int> timestampsFromDateAndHours(DateTime date, List<double> hours) {
+    List<int> timestamps = [];
+
+    for (double hour in hours) {
+      int millisecondsInHour =
+          (hour * 60 * 60 * 1000).round(); // Converti ore in millisecondi
+      DateTime dateTimeWithHour = DateTime(date.year, date.month, date.day)
+          .add(Duration(milliseconds: millisecondsInHour));
+      timestamps.add(dateTimeWithHour.millisecondsSinceEpoch);
+    }
+
+    return timestamps;
   }
 
   int _selectedPage = 0;
@@ -34,6 +56,8 @@ class HomePageState extends State<HomePage> {
   }
 
   DateTime selectedDate = DateTime.now();
+  List<double> hoursArray = [0.01, 23.59];
+  List<int> timestampsArray = [];
 
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
@@ -46,6 +70,8 @@ class HomePageState extends State<HomePage> {
     if (picked != null && picked != selectedDate) {
       setState(() {
         selectedDate = picked;
+        timestampsArray = timestampsFromDateAndHours(picked, hoursArray);
+        _get(timestampsArray);
       });
     }
   }
@@ -56,6 +82,53 @@ class HomePageState extends State<HomePage> {
 
   int currentTemp = 0;
   int currentElec = 0;
+
+  Future<void> _get(List<int> timestamps) async {
+    try {
+      QuerySnapshot documentSnapshot = await firestore
+          .collection('Sectors')
+          .doc('Sec1')
+          .collection('Watt')
+          .get();
+
+      documentSnapshot.docs.forEach((DocumentSnapshot wattDocument) {
+        Map<String, dynamic>? data =
+            wattDocument.data() as Map<String, dynamic>?;
+
+        // Verifica se la conversione è avvenuta con successo
+        if (data != null) {
+          // Accedi ai singoli campi tramite le chiavi
+          String nomeCampo1 = data[
+              'timestamp']; // Sostituisci 'campo1' con il nome del tuo campo
+          String nomeCampo2 =
+              data['value']; // Sostituisci 'campo2' con il nome del tuo campo
+
+          // Puoi ora utilizzare i dati come desiderato
+          print('Campo1: $nomeCampo1');
+          print('Campo2: $nomeCampo2');
+        }
+      });
+    } catch (e) {
+      print('Errore nella query a Firestore: $e');
+    }
+  }
+
+  List<String> sectors = [];
+
+  Future<void> _getSectors() async {
+    try {
+      CollectionReference sectorsCollection =
+          FirebaseFirestore.instance.collection('Sectors');
+
+      QuerySnapshot querySnapshot = await sectorsCollection.get();
+
+      for (QueryDocumentSnapshot documentSnapshot in querySnapshot.docs) {
+        sectors.add(documentSnapshot.id);
+      }
+    } catch (e) {
+      print('Errore nella query a Firestore: $e');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -142,6 +215,53 @@ class HomePageState extends State<HomePage> {
           controller: controller,
           children: <Widget>[
             Scaffold(
+              body: Column(
+                children: [
+                  SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Sector:    $SECTOR",
+                        style: TextStyle(
+                          fontSize: 22,
+                        ),
+                      ),
+                      PopupMenuButton<String>(
+                        icon: Icon(Icons.arrow_drop_down_circle_outlined),
+                        color: Colors.blue,
+                        iconSize: 35,
+                        onSelected: (String value) {
+                          setState(() {
+                            SECTOR = value;
+                          });
+                        },
+                        itemBuilder: (BuildContext context) {
+                          return sectors.map(
+                            (String opzione) {
+                              return PopupMenuItem<String>(
+                                value: opzione,
+                                child: Text(
+                                  opzione,
+                                  style: TextStyle(color: Colors.white),
+                                ),
+                              );
+                            },
+                          ).toList();
+                        },
+                      )
+                    ],
+                  ),
+                  const SizedBox(
+                    height: 10.0,
+                  ),
+                  const Divider(
+                    thickness: 3.0,
+                  ),
+                ],
+              ),
+            ),
+            Scaffold(
               body: SingleChildScrollView(
                 child: Column(
                   children: [
@@ -150,18 +270,59 @@ class HomePageState extends State<HomePage> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Date:   ${_formatDate(selectedDate)}",
+                          "Date: ${_formatDate(selectedDate)}",
                           style: TextStyle(
-                            fontSize: 20,
+                            fontSize: 22,
                           ),
                         ),
                         IconButton(
                           alignment: Alignment.centerLeft,
                           color: Colors.blue,
                           iconSize: 35,
-                          icon: Icon(Icons.arrow_drop_down),
+                          icon: Icon(Icons.arrow_drop_down_circle_outlined),
                           onPressed: () => _selectDate(context),
                         ),
+                      ],
+                    ),
+                    const SizedBox(
+                      height: 10.0,
+                    ),
+                    const Divider(
+                      thickness: 3.0,
+                    ),
+                    SizedBox(height: 10),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Sector:    $SECTOR",
+                          style: TextStyle(
+                            fontSize: 22,
+                          ),
+                        ),
+                        PopupMenuButton<String>(
+                          icon: Icon(Icons.arrow_drop_down_circle_outlined),
+                          color: Colors.blue,
+                          iconSize: 35,
+                          onSelected: (String value) {
+                            setState(() {
+                              SECTOR = value;
+                            });
+                          },
+                          itemBuilder: (BuildContext context) {
+                            return sectors.map(
+                              (String opzione) {
+                                return PopupMenuItem<String>(
+                                  value: opzione,
+                                  child: Text(
+                                    opzione,
+                                    style: TextStyle(color: Colors.white),
+                                  ),
+                                );
+                              },
+                            ).toList();
+                          },
+                        )
                       ],
                     ),
                     const SizedBox(
@@ -317,7 +478,6 @@ class HomePageState extends State<HomePage> {
                 ),
               ),
             ),
-            const Scaffold(),
           ],
           onPageChanged: (index) {
             _onPageChange(index);
@@ -330,13 +490,13 @@ class HomePageState extends State<HomePage> {
       bottomNavigationBar: BottomNavigationBar(
         items: const <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-            icon: Icon(Icons.list_alt),
-            label: 'General consumptions',
+            icon: Icon(Icons.play_circle_outline),
+            label: 'Real-Time Statistics',
             backgroundColor: Colors.lightBlue,
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.sensors),
-            label: 'Sensors',
+            icon: Icon(Icons.list_alt),
+            label: 'Data History',
             backgroundColor: Colors.lightBlue,
           ),
         ],
