@@ -1,12 +1,14 @@
 // ignore_for_file: sort_child_properties_last, prefer_final_fields, prefer_const_constructors
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:core';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:infominds_app/pages/login_page.dart';
 import 'package:intl/intl.dart';
+import 'package:http/http.dart' as http;
 
 class HomePage extends StatefulWidget {
   const HomePage({Key? key}) : super(key: key);
@@ -46,6 +48,7 @@ class HomePageState extends State<HomePage> {
 //______________________________________ FUNCTIONS __________________________________________________________________
 
   String SECTOR = "Sec1";
+  int COUNT_ALERTS = 0;
 
   List<int> timestampsFromDateAndHours(DateTime date, List<double> hours) {
     List<int> timestamps = [];
@@ -178,6 +181,69 @@ class HomePageState extends State<HomePage> {
     }
   }
 
+  void alert() {
+    if (COUNT_ALERTS == 0) {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: Text("Alert"),
+            content: Text("Anomaly detected in electricity consumption!"),
+            actions: [
+              ElevatedButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Chiudi"),
+              ),
+            ],
+          );
+        },
+      );
+      COUNT_ALERTS += 1;
+    }
+  }
+
+  Future<void> pushNotification() async {
+    const String url = "https://fcm.googleapis.com/fcm/send";
+    final Map<String, String> headers = {
+      "Content-Type": "application/json",
+      "Authorization":
+          "key=AAAA-Ntt7lY:APA91bF3WMC75YjCMms8gz0kHLYRRiQJa2V2E26mmNMjDg0UrK7GF4n8N6pHZvPHQ6FIKC-DB_EoBVTMH6_IFV3RI-0tvJV-_CWo_8cbRWX3YQayZXiX4qI_Fz5ICO-MOTvm_H_g2Eaz"
+    };
+    final Map<String, dynamic> body = {
+      "to":
+          "eJTG-3n-TF-dEKIxceROIG:APA91bFjVk593wh5NHhkHVYgCtDAT-gAUeZbivxj8shOSktUEf4ndoeSAe8kksOMthFKj9wY3RdRyrC-xIM-Asd1iVsXfPgNPvocbitCrYH4dZ66KpQZ-zHR2oEmmKgL8GK8VukVvWv0",
+      "notification": {
+        "body": "Anomaly detected in electricity consumption!",
+        "title": "Alert"
+      },
+    };
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: headers,
+        body: jsonEncode(body),
+      );
+
+      if (response.statusCode == 200) {
+        print("Risposta: ${response.body}");
+      } else {
+        print("Errore durante la richiesta. Codice: ${response.statusCode}");
+      }
+    } catch (error) {
+      print("Errore durante la richiesta: $error");
+    }
+  }
+
+  double average_temp = 0.0;
+  double average_elec = 0.0;
+  int min_temp = 100;
+  int max_temp = 0;
+  int min_elec = 200;
+  int max_elec = 0;
+
   Future _getRealTimeSensors() async {
     try {
       QuerySnapshot documentSnapshot = await firestore
@@ -188,12 +254,23 @@ class HomePageState extends State<HomePage> {
 
       int max_timestamp = 0;
       int y = 0;
+      int data_counter = documentSnapshot.docs.length;
+      int data_sum = 0;
 
       documentSnapshot.docs.forEach((DocumentSnapshot document) {
         Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
+        int data_counter = documentSnapshot.docs.length;
 
         if (data != null) {
           int timestamp = data['timestamp'];
+          int plus = data['value'];
+          data_sum = data_sum + plus;
+          if (plus > max_temp) {
+            max_temp = plus;
+          }
+          if (plus < min_temp) {
+            min_temp = plus;
+          }
           if (timestamp > max_timestamp) {
             setState(() {
               max_timestamp = timestamp;
@@ -202,6 +279,7 @@ class HomePageState extends State<HomePage> {
           }
         }
       });
+      average_temp = data_sum / data_counter;
 
       int hour = DateTime.now().hour;
 
@@ -229,12 +307,28 @@ class HomePageState extends State<HomePage> {
 
       int max_timestamp = 0;
       double ywatt = 0;
+      int data_counter = documentSnapshot.docs.length;
+      int data_sum = 0;
 
       documentSnapshot.docs.forEach((DocumentSnapshot document) {
         Map<String, dynamic>? data = document.data() as Map<String, dynamic>?;
+        int data_counter = documentSnapshot.docs.length;
 
         if (data != null) {
           int timestamp = data['timestamp'];
+          double plus = data['value'];
+          int anomaly = data['anomaly'];
+          if (anomaly == -1) {
+            alert();
+            pushNotification();
+          }
+          data_sum = data_sum + plus.round();
+          if (plus > max_elec) {
+            max_elec = plus.round();
+          }
+          if (plus < min_elec) {
+            min_elec = plus.round();
+          }
 
           if (timestamp > max_timestamp) {
             setState(() {
@@ -245,6 +339,7 @@ class HomePageState extends State<HomePage> {
         }
       });
 
+      average_elec = data_sum / data_counter;
       int hour = DateTime.now().hour;
 
       double x = hour.toDouble();
@@ -406,16 +501,52 @@ class HomePageState extends State<HomePage> {
                     height: 40.0,
                   ),
                   Text(
-                    "Current temperature: $currentTemp",
+                    "Current temperature: $currentTemp °C",
                     style: TextStyle(fontSize: 20),
                   ),
                   const SizedBox(
-                    height: 40.0,
+                    height: 30.0,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Minimum: $min_temp °C"),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text("Average: $average_temp °C"),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text("Maximum: $max_temp °C")
+                    ],
+                  ),
+                  SizedBox(height: 20),
+                  Divider(
+                    thickness: 3,
                   ),
                   Text(
-                    "Current electricity consumption: $currentElec",
+                    "Current electricity consumption: $currentElec w",
                     style: TextStyle(fontSize: 20),
-                  )
+                  ),
+                  const SizedBox(
+                    height: 30.0,
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("Minimum: $min_elec w"),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text("Average: $average_elec w"),
+                      SizedBox(
+                        width: 5,
+                      ),
+                      Text("Maximum: $max_elec w")
+                    ],
+                  ),
+                  SizedBox(height: 20),
                 ],
               ),
             ),
